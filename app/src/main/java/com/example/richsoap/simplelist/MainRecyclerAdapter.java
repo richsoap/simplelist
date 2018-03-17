@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import com.example.richsoap.backgroundData.DataManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,7 +17,7 @@ import java.util.UUID;
  * Created by richsoap on 18-3-14.
  */
 
-public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapter.ViewHolder> {
+public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapter.ViewHolder> implements RecyclerTouchHelperAdapter {
     private List<UUID> mUUIDList;
 
     public MainRecyclerAdapter(List<UUID> idList) {
@@ -50,5 +52,23 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     @Override
     public int getItemCount() {
         return mUUIDList.size();
+    }
+
+    @Override
+    public void onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(mUUIDList, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onItemDelete(int location) {
+        mUUIDList.remove(location);
+        notifyItemRemoved(location);
+    }
+
+    @Override
+    public void onItemAdd(List list) {
+        mUUIDList.addAll(list);
+        notifyItemRangeInserted(mUUIDList.size() - list.size(),list.size());
     }
 }

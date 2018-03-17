@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,37 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
-
-    private List<UUID> mUUIDList = new ArrayList<>();
-    MainRecyclerAdapter adapter;
-
-    private MainRecyclerTouchHelperCallback.OnItemTouchCallbackListener onItemTouchCallbackListener = new MainRecyclerTouchHelperCallback.OnItemTouchCallbackListener() {
-        @Override
-        public void onSwipe(int adapterPosition, int direction) {
-            if(!mUUIDList.isEmpty()) {
-                if(direction == ItemTouchHelper.LEFT) {
-                    mUUIDList.addAll(DataManager.getUUIDList());
-                    adapter.notifyItemRangeInserted(mUUIDList.size() - 4,3);
-                }
-                else if(direction == ItemTouchHelper.RIGHT) {
-                    mUUIDList.remove(0);
-                    adapter.notifyItemRemoved(0);
-                }
-            }
-        }
-
-        @Override
-        public boolean onMove(int srcPosition, int targetPosition) {
-            if(!mUUIDList.isEmpty()) {
-                Collections.swap(mUUIDList,srcPosition,targetPosition);
-                adapter.notifyItemMoved(srcPosition,targetPosition);
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-    };
+    private static final String TAG="MainActivity";
+    public MainRecyclerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,18 +31,35 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //toolbar
-        mUUIDList = DataManager.getUUIDList();
-        adapter = new MainRecyclerAdapter(mUUIDList);
+        adapter = new MainRecyclerAdapter(DataManager.getUUIDList());
         RecyclerView recyclerView = (RecyclerView)findViewById(R.id.main_recyclerview);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
-        MainRecyclerTouchHelperCallback helperCallback = new MainRecyclerTouchHelperCallback(onItemTouchCallbackListener);
-        helperCallback.setDragEnable(true);
-        helperCallback.setSwipeEnable(true);
-        MainRecyclerTouchHelper helper = new MainRecyclerTouchHelper(helperCallback);
+        //recyclerview
+        RecyclerTouchHelperCallback.OnItemTouchCallbackListener onItemTouchCallbackListener = new RecyclerTouchHelperCallback.OnItemTouchCallbackListener() {
+            @Override
+            public void onSwipe(int adapterPosition, int direction) {
+                if(direction == ItemTouchHelper.LEFT) {
+                    adapter.onItemDelete(adapterPosition);
+                }
+                else {
+                    adapter.onItemAdd(DataManager.getUUIDList());
+                }
+            }
+
+            @Override
+            public boolean onMove(int srcPosition, int targetPosition) {
+                adapter.onItemMove(srcPosition, targetPosition);
+                return true;
+            }
+        };
+        RecyclerTouchHelperCallback helperCallback = new RecyclerTouchHelperCallback(onItemTouchCallbackListener);
+        helperCallback.setItemViewSwipeEnabled(true);
+        helperCallback.setLongPressDragEnabled(true);
+        RecyclerTouchHelper helper = new RecyclerTouchHelper(helperCallback);
         helper.attachToRecyclerView(recyclerView);
-        //RecyclerView
+        //touchhelper
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
